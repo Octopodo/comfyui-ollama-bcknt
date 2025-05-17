@@ -8,30 +8,46 @@ from ollama import Client
 import numpy as np
 import base64
 from io import BytesIO
-from server import PromptServer
+# from server import PromptServer
 from aiohttp import web
 from pprint import pprint
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 import os
 
+try:
+    from server import PromptServer
+    HAS_SERVER = True
+except ImportError:
+    # Mock de PromptServer para tests
+    class MockPromptServer:
+        class instance:
+            class routes:
+                @staticmethod
+                def post(route):
+                    def decorator(func):
+                        return func
+                    return decorator
+    PromptServer = MockPromptServer
+    HAS_SERVER = False
 
-@PromptServer.instance.routes.post("/ollama/get_models")
-async def get_models_endpoint(request):
-    data = await request.json()
-
-    url = data.get("url")
-    client = Client(host=url)
-
-    models = client.list().get('models', [])
-
-    try:
-        models = [model['model'] for model in models]
-        return web.json_response(models)
-    except Exception as e:
-        models = [model['name'] for model in models]
-        return web.json_response(models)
-
+if HAS_SERVER:
+    @PromptServer.instance.routes.post("/ollama/get_models")
+    async def get_models_endpoint(request):
+        data = await request.json()
+        url = data.get("url")
+        client = Client(host=url)
+        models = client.list().get('models', [])
+        try:
+            models = [model['model'] for model in models]
+            return web.json_response(models)
+        except Exception as e:
+            models = [model['name'] for model in models]
+            return web.json_response(models)
+else:
+    # Versión stub para tests
+    async def get_models_endpoint(request):
+        return web.json_response(["mock_model1", "mock_model2"])
 
 class OllamaVision:
     def __init__(self):
@@ -62,7 +78,7 @@ class OllamaVision:
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("description",)
     FUNCTION = "ollama_vision"
-    CATEGORY = "Ollama"
+    CATEGORY = "BlackNightTales/Ollama"
 
     def ollama_vision(self, images, query, debug, url, model, seed, keep_alive, format):
         images_binary = []
@@ -132,7 +148,7 @@ class OllamaGenerate:
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("response",)
     FUNCTION = "ollama_generate"
-    CATEGORY = "Ollama"
+    CATEGORY = "BlackNightTales/Ollama"
 
     def ollama_generate(self, prompt, debug, url, model, keep_alive, format):
 
@@ -205,7 +221,7 @@ class OllamaGenerateAdvance:
     RETURN_TYPES = ("STRING", "STRING",)
     RETURN_NAMES = ("response", "context",)
     FUNCTION = "ollama_generate_advance"
-    CATEGORY = "Ollama"
+    CATEGORY = "BlackNightTales/Ollama"
 
     def ollama_generate_advance(self, prompt, debug, url, model, system, seed, top_k, top_p, temperature, num_predict,
                                 tfs_z, keep_alive, keep_context, format, context=None):
@@ -286,7 +302,7 @@ class OllamaSaveContext:
     FUNCTION = "ollama_save_context"
 
     OUTPUT_NODE = True
-    CATEGORY = "Ollama"
+    CATEGORY = "BlackNightTales/Ollama"
 
     def ollama_save_context(self, filename, context=None):
         path = self._base_dir + os.path.sep + filename
@@ -313,7 +329,7 @@ class OllamaLoadContext:
                     {"context_file": (files, {})},
                 }
 
-    CATEGORY = "Ollama"
+    CATEGORY = "BlackNightTales/Ollama"
 
     RETURN_NAMES = ("context",)
     RETURN_TYPES = ("STRING",)
@@ -384,7 +400,7 @@ class OllamaOptionsV2:
     RETURN_TYPES = ("OLLAMA_OPTIONS",)
     RETURN_NAMES = ("options",)
     FUNCTION = "ollama_options"
-    CATEGORY = "Ollama"
+    CATEGORY = "BlackNightTales/Ollama"
 
     def ollama_options(self, **kargs):
 
@@ -413,10 +429,10 @@ class OllamaConnectivityV2:
             },
         }
 
-    RETURN_TYPES = ("OLLAMA_CONNECTIVITY",)
-    RETURN_NAMES = ("connection",)
+    RETURN_TYPES = ("OLLAMA_CONNECTIVITY", "STRING")
+    RETURN_NAMES = ("connection", "model", )
     FUNCTION = "ollama_connectivity"
-    CATEGORY = "Ollama"
+    CATEGORY = "BlackNightTales/Ollama"
 
     def ollama_connectivity(self, url, model, keep_alive, keep_alive_unit):
         data = {
@@ -426,7 +442,7 @@ class OllamaConnectivityV2:
             "keep_alive_unit": keep_alive_unit,
         }
 
-        return (data,)
+        return (data, model,)
 
 
 class OllamaGenerateV2:
@@ -461,7 +477,7 @@ class OllamaGenerateV2:
     RETURN_TYPES = ("STRING", "OLLAMA_CONTEXT", "OLLAMA_META",)
     RETURN_NAMES = ("result", "context", "meta",)
     FUNCTION = "ollama_generate_v2"
-    CATEGORY = "Ollama"
+    CATEGORY = "BlackNightTales/Ollama"
 
     def get_request_options(self, options):
         response = None
@@ -573,23 +589,23 @@ format: {format}
 
 
 NODE_CLASS_MAPPINGS = {
-    "OllamaVision": OllamaVision,
-    "OllamaGenerate": OllamaGenerate,
-    "OllamaGenerateAdvance": OllamaGenerateAdvance,
-    "OllamaOptionsV2": OllamaOptionsV2,
-    "OllamaConnectivityV2": OllamaConnectivityV2,
-    "OllamaGenerateV2": OllamaGenerateV2,
-    "OllamaSaveContext": OllamaSaveContext,
-    "OllamaLoadContext": OllamaLoadContext,
+    "BckntOllamaVision": OllamaVision,
+    "BckntOllamaGenerateAdvance": OllamaGenerateAdvance,
+    "BckntOllamaOptionsV2": OllamaOptionsV2,
+    "BckntOllamaGenerate": OllamaGenerate,
+    "BckntOllamaConnectivityV2": OllamaConnectivityV2,
+    "BckntOllamaGenerateV2": OllamaGenerateV2,
+    "BckntOllamaSaveContext": OllamaSaveContext,
+    "BckntOllamaLoadContext": OllamaLoadContext,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "OllamaVision": "Ollama Vision",
-    "OllamaGenerate": "Ollama Generate",
-    "OllamaGenerateAdvance": "Ollama Generate Advance",
-    "OllamaOptionsV2": "Ollama Options V2",
-    "OllamaConnectivityV2": "Ollama Connectivity V2",
-    "OllamaGenerateV2": "Ollama Generate V2",
-    "OllamaSaveContext": "Ollama Save Context",
-    "OllamaLoadContext": "Ollama Load Context",
+    "BckntOllamaVision": "Ollama Vision",
+    "BckntOllamaGenerate": "Ollama Generate",
+    "BckntOllamaGenerateAdvance": "Ollama Generate Advance",
+    "BckntOllamaOptionsV2": "Ollama Options V2",
+    "BckntOllamaConnectivityV2": "Ollama Connectivity V2",
+    "BckntOllamaGenerateV2": "Ollama Generate V2",
+    "BckntOllamaSaveContext": "Ollama Save Context",
+    "BckntOllamaLoadContext": "Ollama Load Context",
 }

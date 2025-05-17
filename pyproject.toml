@@ -6,8 +6,8 @@ license = { file = "LICENSE" }
 dependencies = ["ollama"]
 
 [project.urls]
-Repository = "https://github.com/stavsap/comfyui-ollama"
-#  Used by Comfy Registry https://comfyregistry.org
+Repository = "https://github.com/Octopodo/comfyui-ollama-bcknt.git"
+
 
 [tool.comfy]
 PublisherId = "stavsap"

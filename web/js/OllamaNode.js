@@ -4,7 +4,13 @@ app.registerExtension({
     name: 'Comfy.OllamaNode.Bcknt',
     async beforeRegisterNodeDef(nodeType, nodeData, app) {
         if (
-            ['OllamaGenerate', 'OllamaGenerateAdvance', 'OllamaVision', 'OllamaConnectivityV2'].includes(nodeData.name)
+            [
+                'BckntOllamaGenerate',
+                'BckntOllamaGenerateAdvance',
+                'BckntOllamaVision',
+                'BckntOllamaConnectivityV2',
+                'bcknt_agent'
+            ].includes(nodeData.name)
         ) {
             const originalNodeCreated = nodeType.prototype.onNodeCreated;
             nodeType.prototype.onNodeCreated = async function () {

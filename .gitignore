@@ -1,3 +1,16 @@
+# Python cache files and directories
+__pycache__/
+*.py[cod]
+*$py.class
+*/__pycache__/
+**/__pycache__/
+
+# pytest cache
+.pytest_cache/
+*/.pytest_cache/
+**/.pytest_cache/
+
+# Other ignored items
 venv
 .idea
 saved_context
